@@ -48,46 +48,52 @@ AB.params$model[Group=="anchovy", bait_boats:=0.20]
 AB.params$model[Group=="shrimp", shrimpers:=0.05]
 ```
 
-#  Biological Data:
-#  We now should enter the basic input parameters. Fortunately, the biologists have been busy, 
-#  and we have some survey estimates of biomasses in the bay. The biomasses must be entered with 
-#  the unit: t/km2.
-#  Whales: 10 individuals with an average weight of 800kg. Seals: 203 individuals with an average 
-#  weight of 30kg. Cod: 310t. Whiting 170t. Mackerel: 122t. Anchovy: 600t. Shrimp: 0.8t/km2. 
-#  Zooplankton: 14.8t/km2. Detritus: 10t/km2.
+*Biological Data:*
 
-#  Next are production/biomass ratios, which with certain assumptions correspond to the total 
-#  mortality, Z. The unit is year−1, and we can often get Z from assessments. Alternatively, 
-#  we have Z = F + M, so if we have the catch and the biomass, we can estimate F = C/B and add 
-#  the total natural mortality to get Z. We can get estimates of M and Q/B from FishBase. 
-#  Search for the species, (Gadus morhua, Merlangius merlangus, Scomber scombrus, 
-#  Engraulis encrasicolus), find the life-history table, and extract the values. 
-#  Estimate Z = F + M.
+We now should enter the basic input parameters. Fortunately, the biologists have been busy, and we have some survey estimates of biomasses in the bay. The biomasses must be entered with the unit:t/km2. Whales: 10 individuals with an average weight of 800kg. Seals: 203 individuals with an average weight of 30kg. Cod: 310t. Whiting 170t. Mackerel: 122t. Anchovy: 600t. Shrimp: 0.8t/km2. Zooplankton: 14.8t/km2. Detritus: 10t/km2.
 
+Next are production/biomass ratios, which with certain assumptions correspond to the total mortality, Z. The unit is year−1, and we can often get Z from assessments. Alternatively, we have Z = F + M, so if we have the catch and the biomass, we can estimate F = C/B and add the total natural mortality to get Z. We can get estimates of M and Q/B from FishBase. Search for the species, (Gadus morhua, Merlangius merlangus, Scomber scombrus, Engraulis encrasicolus), find the life-history table, and extract the values. Estimate Z = F + M.
+
+```{r,  include=FALSE}
 AB.params$model[Type < 3, BioAcc  := 0]
 AB.params$model[Type < 2, Unassim := 0.2]
 AB.params$model[Type == 2, Unassim := 0]
 #Detrital Fate
 AB.params$model[Type < 2, detritus := 1]
 AB.params$model[Type > 1, detritus := 0]
+```
 
-#Check for issues in your parameter file with
+Check for issues in your parameter file with
+
+```{r}
 check.rpath.params(AB.params)
+```
 
-#Once parameter file is built use this to run ecopath
+Once parameter file is built use this to run ecopath
+
+```{r}
 AB <- rpath(AB.params, 'Anchovy Bay')
 AB
 print(AB, morts = T)
 webplot(AB)
+```
 
-#Running Rsim
-# 3 step process 
-#Set the scene with rsim.scenario
+Running Rsim: 3 step process 
+Set the scene with rsim.scenario
+
+```{r}
 AB.scene <- rsim.scenario(AB, AB.params, 1:25)
+```
 
-#Make any adjustments
+Make any adjustments
+
+```{r}
 AB.scene <- adjust.fishing(AB.scene, 'ForcedEffort', group = 'trawlers',
                            sim.year = 10:25, value = 0.5)
+```
 
-#Run the scenario
+Run the scenario
+
+```{r}
 AB.run <- rsim.run(AB.scene, years = 1:25)
+```
