@@ -1,0 +1,132 @@
+---
+title: "Anchovy Bay: an imaginary ecosystem model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Anchovy Bay: an imaginary ecosystem model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, include=FALSE}
+library(data.table); library(knitr)
+
+```
+
+Developed by Villy Christensen and modified by Sean Lucey
+
+## Introduction
+
+The purpose of this exercise is to introduce you to the concept of mass balance using the R package Rpath, an implementation of the popular EwE software.  It will demonstrate the type of data that you need to parameterize your own model and have you develop a mass balance model of the imaginary ecosystem, Anchovy Bay.  Anchovy Bay is a popular tourist attraction due to its century-old fishing port and its newer whale-watching industry.  The fisheries have declined over the last decades, and have shifted from a focus on groundfish to being dominated by shrimp and pelagic fisheries. 
+
+The bay covers an area of **100 km2** and is rather isolated from other marine systems, and we can assume that the populations stay in the bay year-round.  Our model will have the following 16 groups.  The first 10 are living: **whales, seals, cod, whiting, mackerel, anchovy, shrimp, benthos, zooplankton**, and **phytoplankton**.  There is one detrital group called **detritus**.  In addition, there are 5 fleets: **sealers, trawlers, seiners, bait boats**, and **shrimpers**.
+
+## Starting off
+
+We will start by building the parameter file for Rpath.  Make sure you have downloaded the package Rpath and all of its dependencies.  Start a new R script, load the package, and create a vector of group names.   
+
+```{r Setting up}
+library(Rpath); library(data.table)
+
+groups <- c('whales', 'seals', 'cod', 'whiting', 'mackerel', 'anchovy', 'shrimp',
+            'benthos', 'zooplankton', 'phytoplankton', 'detritus', 'sealers', 
+            'trawlers', 'seiners', 'bait boats', 'shrimpers')
+```
+
+The next step is to create a vector of group types.  Consumers are 0, producers are 1, detrital groups are 2, and fleets are 3.  Once you have those two vectors you can create the skeleton of the parameter file using the create.rpath.param function.  
+
+```{r setup2}
+types <- c(rep(0, 9), 1, 2, rep(3, 5))
+
+AB.params <- create.rpath.params(groups, types)
+```
+
+The rest of the assignment will be using the available data to populate the parameter file.  The rpath parameter object is of a class called data.table that can be filled similar to a sql statement.  A typical sql statement is **“select x from y where z = a”**.  A data.table would pull up the same data as **y[z == a, x]**.  You can also assign a value to x using the “:=” operator.  For example, if your parameter file is named AB.params and you want to enter the trawlers’ catch of cod as 0.45
+
+```{r datatable}
+AB.params$model[Group == 'cod', trawlers := 0.45] 
+```
+
+(“\$model” is necessary because AB.params is a list of several different parameter files).
+
+## Available Data:
+
+### Fisheries Data:
+
+The sealers caught $15$ seals with an average weight of $30 kg$. The fisheries catches were $45 t$ of cod and $20 t$ of whiting for the trawlers, $40 t$ of mackerel and $120 t$ of anchovy for the seiners, $20 t$ of anchovy for the bait boats, and $5 t$ of shrimp for the shrimpers.  Calculate catches using the appropriate unit ($t/km^2/year$), and enter in Rpath.
+
+### Biological Data:
+
+We now should enter the basic input parameters.  Fortunately, the biologists have been busy, and we have some survey estimates of biomasses in the bay.  The biomasses must be entered with the unit: $t/km^2$. 
+
+Whales: $10$ individuals with an average weight of $800 kg$.  Seals: $203$ individuals with an average weight of $30 kg$.  Cod: $310 t$.  Whiting $170 t$.  Mackerel: $122 t$.  Anchovy: $600 t$.  Shrimp: $0.8 t/km^2$.  Zooplankton: $14.8 t/km^2$.  Detritus: $10 t/km^2$.
+
+Next are production/biomass ratios, which with certain assumptions correspond to the total mortality, Z.  The unit is $year^{-1}$, and we can often get Z from assessments.  Alternatively, we have Z = F + M, so if we have the catch and the biomass, we can estimate F = C/B and add the total natural mortality to get Z. 
+We can get estimates of M and Q/B from [FishBase](fishbase.org).  Search for the species, (*Gadus morhua, Merlangius merlangus, Scomber scombrus, Engraulis encrasicolus*), find the life-history table, and extract the values.  Estimate Z = F + M.
+
+It is also an option for exploited species to use an equation for estimation of Z that was developed by Beverton and Holt (1957). It is implemented in the life-history table in FishBase. It relies on estimates of length at first capture (Lc), average length in the catch (Lmean), and asymptotic length (Linf) to estimate Z. Try it for the four fish species in our model. Here are the lengths from the fishery in Anchovy Bay:
+
+```{r length data, echo = F}
+length <- data.table::data.table(Group = c('Cod', 'Whiting', 'Mackerel',
+                                           'Anchovy'),
+                                 'Lc (cm)' = 	c(52, 17.1, 18.9, 6.8),
+                                 'Lmean (cm)' = c(72, 26.5, 26, 10))
+
+kable(length, caption = "Length information from the fisheries within Achovy Bay.",       booktabs = T, align = 'c')
+```
+
+Compare the Z estimates from the two methods (and consider).  
+
+There is a close relationship between size and P/B; the bigger animals are, the lower the P/B.  Here we have: Whales: P/B = $0.05 year^{-1}$; seals: get F from catch, and M is $0.09 year^{-1}$; shrimp P/B = $3 year^{-1}$; benthos P/B = $3 year^{-1}$; zooplankton: it is mainly small Acartia-sized plankton, with P/B = $35 year^{-1}$.   
+We can get P/B for many invertebrates from Tom Brey’s work (but don’t need to for this tutorial).  Check out: http://www.thomas-brey.de/science/virtualhandbook/.  There is a neat collection of empirical relationships and conversion factors.
+
+Consumption/biomass ratios for the non-fish groups: for whales use $9 year^{-1}$, and for seals $15 year^{-1}$.  For the invertebrates enter a P/Q ratio of 0.25 instead of entering a Q/B. Finally, there is phytoplankton. We can often get primary production estimates from SeaWiFS satellite data.  Here we have PP = $240 gC/m^2/year$.  The conversion factor from $gC$ to $gWW$ is 9, so an easy way to parameterize this is to enter a biomass of $9 t/km^2$ for phytoplankton and a P/B of $240/year$.  Ecopath uses the product of these, so it doesn’t really matter how they are distributed, but the P/B indicates a turnover of less than once per day, which is reasonable. 
+
+Next parameter is Ecotrophic Efficiency (EE), this is the part of the production that is used in the system (or rather for which the model explains the fate of the production).  For benthos, we are missing a biomass estimate.  We do not explain much of the mortality for this group, so guess an EE = $0.6$.
+ 
+
+
+### Diets:  
+```{r diets, echo = F}
+diet <- data.table::data.table('Prey/Pred' = c('Whales', 'Seals', 'Cod', 'Whiting',
+                                             'Mackerel', 'Anchovy', 'Shrimp', 
+                                             'Benthos', 'Zooplankton',
+                                             'Phytoplankton', 'Detritus'),
+                               Whales	= c(NA, NA, 0.1, 0.1, 0.2, 0.5, NA, 0.1, 
+                                          NA, NA, NA),
+                               Seals	= c(NA, NA, 0.04, 0.05, NA, NA, 0.01, 0.9,
+                                         NA, NA, NA),
+                               Cod = c(NA, NA, NA, 0.05, NA, 0.1, 0.01, 0.84, NA,
+                                       NA, NA),
+                               Whiting = c(NA, NA, 0.05, 0.05, NA, 0.45, 0.01,
+                                           0.44, NA, NA, NA),
+                               Mackerel = c(rep(NA, 4), 0.05, 0.5, NA, NA, 0.45,
+                                            NA, NA),
+                               Anchovy = c(rep(NA, 8), 1, NA, NA),
+                               Shrimp = c(rep(NA, 7), 1, NA, NA, NA),
+                               Benthos = c(rep(NA, 7), 0.1, 0.1, 0.1, 0.7),
+                               Zoop = c(rep(NA, 9), 0.9, 0.1))
+
+kable(diet, caption = "Diet composition within Achovy Bay.", 
+      booktabs = T, align = 'c')
+```
+
+You now have the information that is needed to do mass-balance on this model.  Run the rpath.check.param function to make sure that the model has the data it needs.  Then run the rpath function.  Make sure the model is balanced and explore the different mortality rates on each species.  Also plot the food web using the built in function webplot.  
+
+## Exploring Ecosim with Anchovy Bay
+
+Scientists have noticed a gradual decline in the seal population of about 50 kg a year.  The resource managers of Anchovy Bay decide that new regulations should be put in place on the seal fishery to combat this population decline.  Local trawlers are concerned that an increased seal population will negatively impact their business as their chief targets are prey for seals.  Build an rsim scenario that shows the impact of the seal decline and one that shows the impact of reducing the seal fishery in half.  Also test the impact if seals are a strong ‘top-down’ predator.  Run the simulations for 25 years.
+
+Several years later, ecotourism becomes a big part of Anchovy Bay.  A portion of the trawlers shift their effort to taking customers whale watching.  What is the impact on the groundfish species?  What if cod are a strong ‘top-down’ predator?  It has been studied that whiting will increase their consumption when at lower numbers.  What effect does this have on the previous scenario?
+
+Scenarios can be viewed as a table or as a graph.  The built in function in Rpath for graphing the results is rsim.plot.  Play around with whatever other scenario you can think up.
+
+Run scenarios varying level of trawling effort. Find the effort leading to maximum long-term yield for the trawl fishery. Plot and discuss implications for species biomass, mix of species in the trawl catch, and impact on other gears associated with fishing at maximum yield for trawl.
+ 
+Finally, develop two or more strategies to test in an MSE framework within Anchovy Bay.  The management objective is to maximize fishery yield but not allowing any species to go below $1/2\ B_{MSY}$.  Show tradeoffs between fisheries.  Assuming that cod sells for \$3/pound, mackerel \$2/pound, whiting \$1/pound, shrimp \$4/pound, and anchovies \$0.50/pound is one of your strategies more economically beneficial to the community? The `AB_closed_loop.R` script can help you set-up the closed loop simulation.

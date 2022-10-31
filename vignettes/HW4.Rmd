@@ -1,0 +1,93 @@
+---
+title: "Edwards-Perez-Whelpley-HW4"
+output: html_document
+date: "2022-10-31"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,  include=FALSE}
+library(Rpath)
+library(data.table)
+#devtools::install_github('NOAA-EDAB/Rpath', build_vignettes = TRUE)
+library(devtools)
+```
+
+**Anchovy Bay: an imaginary ecosystem model**
+
+The bay covers an area of 100 km2 and is rather isolated from other marine systems, and we can assume that the populations stay in the bay year-round. Our model will have the following 16 groups. The first 10 are living: whales, seals, cod, whiting, mackerel, anchovy, shrimp, benthos, zooplankton, and phytoplankton. There is one detrital group called detritus. In addition, there are 5 fleets: sealers, trawlers, seiners, bait boats, and shrimpers
+
+Building the parameter file for Rpath:
+
+```{r,  include=FALSE}
+groups <- c('whales', 'seals', 'cod', 'whiting', 'mackerel', 'anchovy', 'shrimp',
+            'benthos', 'zooplankton', 'phytoplankton', 'detritus', 'sealers', 
+            'trawlers', 'seiners', 'bait boats', 'shrimpers')
+
+types <- c(rep(0, 9), 1, 2, rep(3, 5))
+
+AB.params <- create.rpath.params(groups, types)
+```
+
+**Fisheries Data:**
+
+The sealers caught 15 seals with an average weight of 30kg. The fisheries catches were 45t of cod and 20t of whiting for the trawlers, 40t of mackerel and 120t of anchovy for the seiners, 20t of anchovy for the bait boats, and 5t of shrimp for the shrimpers. Calculate catches using the appropriate unit (t/km2/year), and enter in Rpath.
+
+*Static parameters for this example:*
+Biomass accumulation and unassimilated production
+
+```{r,  include=FALSE}
+AB.params$model[Group=="seals", sealers:=0.0049604]
+AB.params$model[Group=="cod", trawlers:=0.45]
+AB.params$model[Group=="whiting", trawlers:=0.20]
+AB.params$model[Group=="mackerel", seiners:=0.40]
+AB.params$model[Group=="anchovy", seiners:=1.20]
+AB.params$model[Group=="anchovy", bait_boats:=0.20]
+AB.params$model[Group=="shrimp", shrimpers:=0.05]
+```
+
+#  Biological Data:
+#  We now should enter the basic input parameters. Fortunately, the biologists have been busy, 
+#  and we have some survey estimates of biomasses in the bay. The biomasses must be entered with 
+#  the unit: t/km2.
+#  Whales: 10 individuals with an average weight of 800kg. Seals: 203 individuals with an average 
+#  weight of 30kg. Cod: 310t. Whiting 170t. Mackerel: 122t. Anchovy: 600t. Shrimp: 0.8t/km2. 
+#  Zooplankton: 14.8t/km2. Detritus: 10t/km2.
+
+#  Next are production/biomass ratios, which with certain assumptions correspond to the total 
+#  mortality, Z. The unit is year−1, and we can often get Z from assessments. Alternatively, 
+#  we have Z = F + M, so if we have the catch and the biomass, we can estimate F = C/B and add 
+#  the total natural mortality to get Z. We can get estimates of M and Q/B from FishBase. 
+#  Search for the species, (Gadus morhua, Merlangius merlangus, Scomber scombrus, 
+#  Engraulis encrasicolus), find the life-history table, and extract the values. 
+#  Estimate Z = F + M.
+
+AB.params$model[Type < 3, BioAcc  := 0]
+AB.params$model[Type < 2, Unassim := 0.2]
+AB.params$model[Type == 2, Unassim := 0]
+#Detrital Fate
+AB.params$model[Type < 2, detritus := 1]
+AB.params$model[Type > 1, detritus := 0]
+
+#Check for issues in your parameter file with
+check.rpath.params(AB.params)
+
+#Once parameter file is built use this to run ecopath
+AB <- rpath(AB.params, 'Anchovy Bay')
+AB
+print(AB, morts = T)
+webplot(AB)
+
+#Running Rsim
+# 3 step process 
+#Set the scene with rsim.scenario
+AB.scene <- rsim.scenario(AB, AB.params, 1:25)
+
+#Make any adjustments
+AB.scene <- adjust.fishing(AB.scene, 'ForcedEffort', group = 'trawlers',
+                           sim.year = 10:25, value = 0.5)
+
+#Run the scenario
+AB.run <- rsim.run(AB.scene, years = 1:25)
