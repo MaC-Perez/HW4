@@ -1,7 +1,0 @@
-"0","groups <- c('whales', 'seals', 'cod', 'whiting', 'mackerel', 'anchovy', 'shrimp',"
-"0","            'benthos', 'zooplankton', 'phytoplankton', 'detritus', 'sealers', "
-"0","            'trawlers', 'seiners', 'bait boats', 'shrimpers')"
-"0",""
-"0","types <- c(rep(0, 9), 1, 2, rep(3, 5))"
-"0",""
-"0","AB.params <- create.rpath.params(groups, types)"

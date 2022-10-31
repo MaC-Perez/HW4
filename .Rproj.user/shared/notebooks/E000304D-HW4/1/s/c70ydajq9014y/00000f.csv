@@ -1,4 +1,0 @@
-"0","library(Rpath)"
-"0","library(data.table)"
-"0","#devtools::install_github('NOAA-EDAB/Rpath', build_vignettes = TRUE)"
-"0","library(devtools)"

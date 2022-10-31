@@ -1,7 +1,0 @@
-"0","AB.params$model[Group==""seals"", sealers:=0.0049604]"
-"0","AB.params$model[Group==""cod"", trawlers:=0.45]"
-"0","AB.params$model[Group==""whiting"", trawlers:=0.20]"
-"0","AB.params$model[Group==""mackerel"", seiners:=0.40]"
-"0","AB.params$model[Group==""anchovy"", seiners:=1.20]"
-"0","AB.params$model[Group==""anchovy"", bait_boats:=0.20]"
-"0","AB.params$model[Group==""shrimp"", shrimpers:=0.05]"
