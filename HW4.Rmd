@@ -36,22 +36,23 @@ AB.params <- create.rpath.params(groups, types)
 The sealers caught 15 seals with an average weight of 30kg. The fisheries catches were 45t of cod and 20t of whiting for the trawlers, 40t of mackerel and 120t of anchovy for the seiners, 20t of anchovy for the bait boats, and 5t of shrimp for the shrimpers. Calculate catches using the appropriate unit (t/km2/year), and enter in Rpath.
 
 *Static parameters for this example:*
-Biomass accumulation and unassimilated production
+Biomass accumulation and un-assimilated production
 
 ```{r,  include=FALSE}
-AB.params$model[Group=="seals", sealers:=0.0049604] #30 kilos? 
+AB.params$model[Group=="seals", sealers:=0.0045] 
 AB.params$model[Group=="cod", trawlers:=0.45]
 AB.params$model[Group=="whiting", trawlers:=0.20]
 AB.params$model[Group=="mackerel", seiners:=0.40]
 AB.params$model[Group=="anchovy", seiners:=1.20]
-AB.params$model[Group=="anchovy", bait_boats:=0.20]
+AB.params$model[Group=="anchovy", "bait boats":=0.20]
 AB.params$model[Group=="shrimp", shrimpers:=0.05]
 ```
 
+**Biological Data:**
 
 ```{r,  include=FALSE}
-AB.params$model[Group=="whales", Biomass:=0.0881848] 
-AB.params$model[Group=="seals", Biomass:=0.0671307396]
+AB.params$model[Group=="whales", Biomass:=0.08] 
+AB.params$model[Group=="seals", Biomass:=0.0609]
 AB.params$model[Group=="cod", Biomass:=3.1]
 AB.params$model[Group=="whiting", Biomass:=1.7]
 AB.params$model[Group=="mackerel", Biomass:=1.22]
@@ -62,27 +63,37 @@ AB.params$model[Group=="detritus", Biomass:=10]
 AB.params$model[Group=="phytoplankton", Biomass:=9]
 ```
 
+**P/B ratio:**
+
+```{r}
+AB.params$model[Group=="whales", PB:=0.05] 
+AB.params$model[Group=="seals", PB:=0.1639]
+AB.params$model[Group=="cod", PB:=0.355]
+AB.params$model[Group=="whiting", PB:=0.587]
+AB.params$model[Group=="mackerel", PB:=1.1478]
+AB.params$model[Group=="anchovy", PB:=1.2233]
+AB.params$model[Group=="shrimp", PB:=3]
+AB.params$model[Group=="zooplankton", PB:=35]
+AB.params$model[Group=="benthos", PB:=3]
+AB.params$model[Group=="phytoplankton", PB:=240]
+```
+
+**Q/B ratio:**
+
 ```{r,  include=FALSE}
+AB.params$model[Group=="whales", QB:=9]
+AB.params$model[Group=="seals", QB:=15]
 AB.params$model[Group=="cod", QB:=2.58]
 AB.params$model[Group=="whiting", QB:=3.3]
 AB.params$model[Group=="mackerel", QB:=4.4]
 AB.params$model[Group=="anchovy", QB:=9.13]
 ```
 
-```{r,  include=FALSE}
-AB.params$model[Group=="whales", PB:=0.05] 
-#AB.params$model[Group=="seals", PB:=]
-#AB.params$model[Group=="cod", PB:=]
-#AB.params$model[Group=="whiting", PB:=]
-#AB.params$model[Group=="mackerel", PB:=]
-#AB.params$model[Group=="anchovy", PB:=]
-#AB.params$model[Group=="shrimp", PB:=3]
-AB.params$model[Group=="zooplankton", PB:=35]
-AB.params$model[Group=="benthos", PB:=3]
-AB.params$model[Group=="phytoplankton", PB:=240]
-```
+**E/E:**
 
-*Biological Data:*
+```{r,  include=FALSE}
+AB.params$model[Group=="benthos", EE:=0.6]
+```
 
 We now should enter the basic input parameters. Fortunately, the biologists have been busy, and we have some survey estimates of biomasses in the bay. The biomasses must be entered with the unit:t/km2. Whales: 10 individuals with an average weight of 800kg. Seals: 203 individuals with an average weight of 30kg. Cod: 310t. Whiting 170t. Mackerel: 122t. Anchovy: 600t. Shrimp: 0.8t/km2. Zooplankton: 14.8t/km2. Detritus: 10t/km2.
 
@@ -96,6 +107,25 @@ AB.params$model[Type == 2, Unassim := 0]
 AB.params$model[Type < 2, detritus := 1]
 AB.params$model[Type > 1, detritus := 0]
 ```
+
+
+It is also an option for exploited species to use an equation for estimation of Z that was developed by Beverton and Holt (1957). It is implemented in the life-history table in FishBase. It relies on estimates of length at first capture (Lc), average length in the catch (Lmean), and asymptotic length (Linf) to estimate Z. Try it for the four fish species in our model. Here are the lengths from the fishery in Anchovy Bay:
+
++---------+---------+-------------+------+
+| Species | Z (B&H) | Z from data | diff |
++:=======:+:=======:+:===========:+:====:+
+| Cod     |  0.29   |    0.36     | -0.07|		
++---------+---------+-------------+------+		
+| Whiting |  0.59   |    0.59     |  0.00|		
++---------+---------+-------------+------+		
+| Mackerel|  0.63   |    1.15     | -0.51|		
++---------+---------+-------------+------+		
+| Anchovy |  1.48   |    1.22     |  0.25|		
++---------+---------+-------------+------+		
+
+There is a close relationship between size and P/B; the bigger animals are, the lower the P/B. Here we have: Whales: P/B = 0.05year−1; seals: get F from catch, and M is 0.09year−1; shrimp P/B = 3year−1; benthos P/B = 3year−1; zooplankton: it is mainly small Acartia-sized plankton, with P/B = 35year−1.
+We can get P/B for many invertebrates from Tom Brey’s work (but don’t need to for this tutorial). Check out: http://www.thomas-brey.de/science/virtualhandbook/. There is a neat collection of empirical relationships and conversion factors.
+
 
 Check for issues in your parameter file with
 
@@ -131,3 +161,4 @@ Run the scenario
 ```{r}
 AB.run <- rsim.run(AB.scene, years = 1:25)
 ```
+
