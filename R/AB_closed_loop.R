@@ -55,3 +55,5 @@ rsim.plot(AB.full, groups[1:11])
 cod <- extract.node(AB.full, 'cod')
 plot(cod$Biomass, xlab = 'Month', ylab = 'Biomass')
 abline(h = cod.ref)
+
+

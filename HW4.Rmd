@@ -48,7 +48,7 @@ AB.params$model[Group=="anchovy", "bait boats":=0.20]
 AB.params$model[Group=="shrimp", shrimpers:=0.05]
 ```
 
-**Biological Data:**
+**Biological Data:** 
 
 ```{r,  include=FALSE}
 AB.params$model[Group=="whales", Biomass:=0.08] 
@@ -63,9 +63,9 @@ AB.params$model[Group=="detritus", Biomass:=10]
 AB.params$model[Group=="phytoplankton", Biomass:=9]
 ```
 
-**P/B ratio:**
+P/B ratio: check!
 
-```{r}
+```{r, include=FALSE}
 AB.params$model[Group=="whales", PB:=0.05] 
 AB.params$model[Group=="seals", PB:=0.1639]
 AB.params$model[Group=="cod", PB:=0.355]
@@ -78,7 +78,7 @@ AB.params$model[Group=="benthos", PB:=3]
 AB.params$model[Group=="phytoplankton", PB:=240]
 ```
 
-**Q/B ratio:**
+Q/B ratio: check!
 
 ```{r,  include=FALSE}
 AB.params$model[Group=="whales", QB:=9]
@@ -89,7 +89,7 @@ AB.params$model[Group=="mackerel", QB:=4.4]
 AB.params$model[Group=="anchovy", QB:=9.13]
 ```
 
-**E/E:**
+E/E: check!
 
 ```{r,  include=FALSE}
 AB.params$model[Group=="benthos", EE:=0.6]
@@ -114,7 +114,6 @@ AB.params$model[Type < 2, detritus := 1]
 AB.params$model[Type > 1, detritus := 0]
 ```
 
-
 It is also an option for exploited species to use an equation for estimation of Z that was developed by Beverton and Holt (1957). It is implemented in the life-history table in FishBase. It relies on estimates of length at first capture (Lc), average length in the catch (Lmean), and asymptotic length (Linf) to estimate Z. Try it for the four fish species in our model. Here are the lengths from the fishery in Anchovy Bay:
 
 +---------+---------+-------------+------+
@@ -130,16 +129,19 @@ It is also an option for exploited species to use an equation for estimation of 
 +---------+---------+-------------+------+		
 
 There is a close relationship between size and P/B; the bigger animals are, the lower the P/B. Here we have: Whales: P/B = 0.05year−1; seals: get F from catch, and M is 0.09year−1; shrimp P/B = 3year−1; benthos P/B = 3year−1; zooplankton: it is mainly small Acartia-sized plankton, with P/B = 35year−1.
+
 We can get P/B for many invertebrates from Tom Brey’s work (but don’t need to for this tutorial). Check out: http://www.thomas-brey.de/science/virtualhandbook/. There is a neat collection of empirical relationships and conversion factors.
 
 
 Check for issues in your parameter file with
 
-```{r}
+```{r, include=FALSE}
 check.rpath.params(AB.params)
 ```
 
 Once parameter file is built use this to run ecopath
+
+STATUS BALANCED!
 
 ```{r}
 AB <- rpath(AB.params, 'Anchovy Bay')
@@ -158,7 +160,7 @@ AB.scene <- rsim.scenario(AB, AB.params, 1:25)
 Make any adjustments
 
 ```{r}
-AB.scene <- adjust.fishing(AB.scene, 'ForcedEffort', group = 'trawlers',
+AB.scene <- adjust.fishing(AB.scene, 'ForcedEffort', group = 'sealers',
                            sim.year = 10:25, value = 0.5)
 ```
 
@@ -167,4 +169,35 @@ Run the scenario
 ```{r}
 AB.run <- rsim.run(AB.scene, years = 1:25)
 ```
+
+
+**Food web plot**
+
+```{r}
+webplot(AB,
+  eco.name = attr(AB, "eco.name"),
+  line.col = "grey",
+  highlight = NULL,
+  highlight.col = c("black", "red", "orange"),
+  labels = FALSE,
+  label.pos = NULL,
+  label.num = FALSE,
+  label.cex = 1,
+  fleets = FALSE,
+  type.col = "black",
+  box.order = NULL
+)
+```
+
+**Exploring Ecosim with Anchovy Bay**
+
+Scientists have noticed a gradual decline in the seal population of about 50 kg a year. The resource managers of Anchovy Bay decide that new regulations should be put in place on the seal fishery to combat this population decline. Local trawlers are concerned that an increased seal population will negatively impact their business as their chief targets are prey for seals. Build an rsim scenario that shows the impact of the seal decline and one that shows the impact of reducing the seal fishery in half. Also test the impact if seals are a strong ‘top-down’ predator. Run the simulations for 25 years.
+
+Several years later, ecotourism becomes a big part of Anchovy Bay. A portion of the trawlers shift their effort to taking customers whale watching. What is the impact on the groundfish species? What if cod are a strong ‘top-down’ predator? It has been studied that whiting will increase their consumption when at lower numbers. What effect does this have on the previous scenario?
+
+Scenarios can be viewed as a table or as a graph. The built in function in Rpath for graphing the results is rsim.plot. Play around with whatever other scenario you can think up.
+
+Run scenarios varying level of trawling effort. Find the effort leading to maximum long-term yield for the trawl fishery. Plot and discuss implications for species biomass, mix of species in the trawl catch, and impact on other gears associated with fishing at maximum yield for trawl.
+
+Finally, develop two or more strategies to test in an MSE framework within Anchovy Bay. The management objective is to maximize fishery yield but not allowing any species to go below 1/2 BMSY. Show tradeoffs between fisheries. Assuming that cod sells for $3/pound, mackerel $2/pound, whiting $1/pound, shrimp $4/pound, and anchovies $0.50/pound is one of your strategies more economically beneficial to the community? The AB_closed_loop.R script can help you set-up the closed loop simulation.
 
