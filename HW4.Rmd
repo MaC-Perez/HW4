@@ -95,6 +95,12 @@ AB.params$model[Group=="anchovy", QB:=9.13]
 AB.params$model[Group=="benthos", EE:=0.6]
 ```
 
+```{r,  include=FALSE}
+AB.params$model[Group=="shrimp", ProdCons:=0.25]
+#AB.params$model[Group=="benthos", ProdCons:=0.25]
+#AB.params$model[Group=="zooplankton", ProdCons:=0.25]
+```
+
 We now should enter the basic input parameters. Fortunately, the biologists have been busy, and we have some survey estimates of biomasses in the bay. The biomasses must be entered with the unit:t/km2. Whales: 10 individuals with an average weight of 800kg. Seals: 203 individuals with an average weight of 30kg. Cod: 310t. Whiting 170t. Mackerel: 122t. Anchovy: 600t. Shrimp: 0.8t/km2. Zooplankton: 14.8t/km2. Detritus: 10t/km2.
 
 Next are production/biomass ratios, which with certain assumptions correspond to the total mortality, Z. The unit is year−1, and we can often get Z from assessments. Alternatively, we have Z = F + M, so if we have the catch and the biomass, we can estimate F = C/B and add the total natural mortality to get Z. We can get estimates of M and Q/B from FishBase. Search for the species, (Gadus morhua, Merlangius merlangus, Scomber scombrus, Engraulis encrasicolus), find the life-history table, and extract the values. Estimate Z = F + M.
