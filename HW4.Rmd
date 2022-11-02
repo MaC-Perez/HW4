@@ -97,9 +97,11 @@ AB.params$model[Group=="benthos", EE:=0.6]
 
 ```{r,  include=FALSE}
 AB.params$model[Group=="shrimp", ProdCons:=0.25]
-#AB.params$model[Group=="benthos", ProdCons:=0.25]
-#AB.params$model[Group=="zooplankton", ProdCons:=0.25]
+AB.params$model[Group=="benthos", ProdCons:=0.25]
+AB.params$model[Group=="zooplankton", ProdCons:=0.25]
 ```
+
+DIET DATA: check!
 
 ```{r,  include=FALSE}
 AB.params$diet[Group == 'cod', whales := 0.1]
@@ -234,9 +236,62 @@ webplot(AB,
 
 Scientists have noticed a gradual decline in the seal population of about 50 kg a year. The resource managers of Anchovy Bay decide that new regulations should be put in place on the seal fishery to combat this population decline. Local trawlers are concerned that an increased seal population will negatively impact their business as their chief targets are prey for seals. Build an rsim scenario that shows the impact of the seal decline and one that shows the impact of reducing the seal fishery in half. Also test the impact if seals are a strong ‘top-down’ predator. Run the simulations for 25 years.
 
+**Increasing on fishing effort for seals, reduce the seals population and increase cod and whiting biomass due to less predation mortality**
+
+```{r}
+#load(here('data', 'AB.params.rda'))
+#load(here('data', 'AB.rda'))
+AB.base <- rsim.scenario(AB, AB.params, 1:25)
+AB.base <- adjust.fishing(AB.base, parameter = 'ForcedEffort', group = 'sealers',
+                          sim.year = 10:25, value = 2.5)
+```
+
+```{r}
+AB.run <- rsim.run(AB.base, years = 1:25)
+
+#Output results
+AB.run
+#To capture results as an object use the write.Rsim function
+AB.output <- write.Rsim(AB.run)
+```
+```{r}
+cod <- extract.node(AB.run, 'cod')
+plot(cod$Biomass, xlab = 'Month', ylab = 'Biomass')
+
+whiting <- extract.node(AB.run, 'whiting')
+plot(whiting$Biomass, xlab = 'Month', ylab = 'Biomass')
+```
+**on the other hand, a decrease in fishing effort on seals will produce higher seals biomass due to less fishing pressure, producing a decrease in cod and whiting biomass**
+
+```{r}
+AB.base <- rsim.scenario(AB, AB.params, 1:25)
+AB.base <- adjust.fishing(AB.base, parameter = 'ForcedEffort', group = 'sealers',
+                          sim.year = 10:25, value = 0.5)
+```
+
+```{r, include=FALSE}
+AB.run <- rsim.run(AB.base, years = 1:25)
+
+#Output results
+AB.run
+#To capture results as an object use the write.Rsim function
+AB.output <- write.Rsim(AB.run)
+
+#plot results
+rsim.plot(AB.run)
+```
+
+```{r}
+cod <- extract.node(AB.run, 'cod')
+plot(cod$Biomass, xlab = 'Month', ylab = 'Biomass')
+
+whiting <- extract.node(AB.run, 'whiting')
+plot(whiting$Biomass, xlab = 'Month', ylab = 'Biomass')
+```
+
 Several years later, ecotourism becomes a big part of Anchovy Bay. A portion of the trawlers shift their effort to taking customers whale watching. What is the impact on the groundfish species? What if cod are a strong ‘top-down’ predator? It has been studied that whiting will increase their consumption when at lower numbers. What effect does this have on the previous scenario?
 
-Scenarios can be viewed as a table or as a graph. The built in function in Rpath for graphing the results is rsim.plot. Play around with whatever other scenario you can think up.
+if I decrease fishing effort on trawler fishery I will have a higher biomass of cod and groundfish species
 
 Run scenarios varying level of trawling effort. Find the effort leading to maximum long-term yield for the trawl fishery. Plot and discuss implications for species biomass, mix of species in the trawl catch, and impact on other gears associated with fishing at maximum yield for trawl.
 
