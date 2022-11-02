@@ -6,15 +6,18 @@ load(here('data', 'AB.params.rda'))
 load(here('data', 'AB.rda'))
 
 # create a scenario
-AB.base <- rsim.scenario(AB, AB.params, 1:100)
+#AB.base <- rsim.scenario(AB, AB.params, 1:100)
+AB.base <- rsim.scenario(AB, AB.params, 1:25)
+AB.run <- rsim.run(AB.base, years = 1:25)
 
 #Determine reference point for cod----
 #Turn off fishing to get a proxy for b0
-gear <- AB.params$model[Type == 3, Group]
-for(i in 1:length(gear)){
-  AB.base <- adjust.fishing(AB.base, parameter = 'ForcedEffort', group = gear[i], 
-                            value = 0, sim.year = 0:100)
-}
+#gear <- AB.params$model[Type == 3, Group]
+#for(i in 1:length(gear)){
+#  AB.base <- adjust.fishing(AB.base, parameter = 'ForcedEffort', group = gear[i], 
+#                            value = 0, sim.year = 0:100)
+#}
+
 AB.b0 <- rsim.run(AB.base, method = 'RK4', 1:25)
 
 #Extract cod data and find b0
@@ -55,5 +58,40 @@ rsim.plot(AB.full, groups[1:11])
 cod <- extract.node(AB.full, 'cod')
 plot(cod$Biomass, xlab = 'Month', ylab = 'Biomass')
 abline(h = cod.ref)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+GB.bio<-as.data.table(AB.run$out_Biomass)
+GB.bio[,Month:=1:nrow(GB.bio)]
+GB.bio<-data.table::melt(GB.bio, id.vars="Month", variable.name="Group",
+                         value.name="Biomass")
+start<-data.table::as.data.table(AB.run$start_state$Biomass)
+start[,Group:=names(AB.run$start_state$Biomass)]
+
+GB.bio<- merge(GB.bio, start, by="Group")
+GB.bio[,Rel.biomass:=Biomass/V1]
+
+ggplot(GB.bio[Group %in% c("cod", "whiting", "mackerel", "anchovy", "shrimp", "seals")],
+       aes(x=Month, y=Rel.biomass, col=Group))+
+  geom_line()
 
 

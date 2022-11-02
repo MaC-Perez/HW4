@@ -101,6 +101,47 @@ AB.params$model[Group=="shrimp", ProdCons:=0.25]
 #AB.params$model[Group=="zooplankton", ProdCons:=0.25]
 ```
 
+```{r,  include=FALSE}
+AB.params$diet[Group == 'cod', whales := 0.1]
+AB.params$diet[Group == 'cod', seals := 0.04]
+AB.params$diet[Group == 'cod', whiting := 0.05]
+
+AB.params$diet[Group == 'whiting', whales := 0.1]
+AB.params$diet[Group == 'whiting', seals := 0.05]
+AB.params$diet[Group == 'whiting', cod := 0.05]
+AB.params$diet[Group == 'whiting', whiting := 0.05]
+
+AB.params$diet[Group == 'mackerel', whales := 0.2]
+AB.params$diet[Group == 'mackerel', mackerel := 0.05]
+
+AB.params$diet[Group == 'anchovy', whales := 0.5]
+AB.params$diet[Group == 'anchovy', cod := 0.10]
+AB.params$diet[Group == 'anchovy', whiting := 0.45]
+AB.params$diet[Group == 'anchovy', mackerel := 0.50]
+
+AB.params$diet[Group == 'shrimp', seals := 0.01]
+AB.params$diet[Group == 'shrimp', cod := 0.01]
+AB.params$diet[Group == 'shrimp', whiting := 0.01]
+
+AB.params$diet[Group == 'benthos', whales := 0.1]
+AB.params$diet[Group == 'benthos', seals := 0.90]
+AB.params$diet[Group == 'benthos', cod := 0.84]
+AB.params$diet[Group == 'benthos', whiting := 0.44]
+AB.params$diet[Group == 'benthos', shrimp := 1]
+AB.params$diet[Group == 'benthos', benthos := 0.1]
+
+AB.params$diet[Group == 'zooplankton', mackerel := .45]
+AB.params$diet[Group == 'zooplankton', anchovy := 1]
+AB.params$diet[Group == 'zooplankton', benthos := .1]
+
+AB.params$diet[Group == 'phytoplankton', benthos := .1]
+AB.params$diet[Group == 'phytoplankton', zooplankton := .9]
+
+AB.params$diet[Group == 'detritus', benthos := .7]
+AB.params$diet[Group == 'detritus', zooplankton := .1]
+```
+
+
 We now should enter the basic input parameters. Fortunately, the biologists have been busy, and we have some survey estimates of biomasses in the bay. The biomasses must be entered with the unit:t/km2. Whales: 10 individuals with an average weight of 800kg. Seals: 203 individuals with an average weight of 30kg. Cod: 310t. Whiting 170t. Mackerel: 122t. Anchovy: 600t. Shrimp: 0.8t/km2. Zooplankton: 14.8t/km2. Detritus: 10t/km2.
 
 Next are production/biomass ratios, which with certain assumptions correspond to the total mortality, Z. The unit is year−1, and we can often get Z from assessments. Alternatively, we have Z = F + M, so if we have the catch and the biomass, we can estimate F = C/B and add the total natural mortality to get Z. We can get estimates of M and Q/B from FishBase. Search for the species, (Gadus morhua, Merlangius merlangus, Scomber scombrus, Engraulis encrasicolus), find the life-history table, and extract the values. Estimate Z = F + M.
@@ -128,7 +169,7 @@ It is also an option for exploited species to use an equation for estimation of 
 | Anchovy |  1.48   |    1.22     |  0.25|		
 +---------+---------+-------------+------+		
 
-There is a close relationship between size and P/B; the bigger animals are, the lower the P/B. Here we have: Whales: P/B = 0.05year−1; seals: get F from catch, and M is 0.09year−1; shrimp P/B = 3year−1; benthos P/B = 3year−1; zooplankton: it is mainly small Acartia-sized plankton, with P/B = 35year−1.
+There is a close relationship between size and P/B; the bigger animals are, the lower the P/B. Here we have: Whales: P/B = 0.05year−1; seals: get F from catch, and M is 0.09 year−1; shrimp P/B = 3year−1; benthos P/B = 3year−1; zooplankton: it is mainly small Acartia-sized plankton, with P/B = 35year−1.
 
 We can get P/B for many invertebrates from Tom Brey’s work (but don’t need to for this tutorial). Check out: http://www.thomas-brey.de/science/virtualhandbook/. There is a neat collection of empirical relationships and conversion factors.
 
@@ -143,7 +184,7 @@ Once parameter file is built use this to run ecopath
 
 STATUS BALANCED!
 
-```{r}
+```{r, include=FALSE}
 AB <- rpath(AB.params, 'Anchovy Bay')
 AB
 print(AB, morts = T)
@@ -160,7 +201,7 @@ AB.scene <- rsim.scenario(AB, AB.params, 1:25)
 Make any adjustments
 
 ```{r}
-AB.scene <- adjust.fishing(AB.scene, 'ForcedEffort', group = 'sealers',
+AB.scene <- adjust.fishing(AB.scene, 'ForcedEffort', group = 'trawlers',
                            sim.year = 10:25, value = 0.5)
 ```
 
@@ -179,7 +220,7 @@ webplot(AB,
   line.col = "grey",
   highlight = NULL,
   highlight.col = c("black", "red", "orange"),
-  labels = FALSE,
+  labels = TRUE,
   label.pos = NULL,
   label.num = FALSE,
   label.cex = 1,
