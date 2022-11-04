@@ -1,7 +1,10 @@
 ---
 title: "Edwards-Perez-Whelpley-HW4"
-output: html_document
-date: "2022-10-31"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+date: "2022/11/03"
 ---
 
 ```{r setup, include=FALSE}
@@ -13,13 +16,17 @@ library(Rpath)
 library(data.table)
 #devtools::install_github('NOAA-EDAB/Rpath', build_vignettes = TRUE)
 library(devtools)
+library(ggplot2)
 ```
 
 **Anchovy Bay: an imaginary ecosystem model**
+\vspace{10pt}
 
 The bay covers an area of 100 km2 and is rather isolated from other marine systems, and we can assume that the populations stay in the bay year-round. Our model will have the following 16 groups. The first 10 are living: whales, seals, cod, whiting, mackerel, anchovy, shrimp, benthos, zooplankton, and phytoplankton. There is one detrital group called detritus. In addition, there are 5 fleets: sealers, trawlers, seiners, bait boats, and shrimpers
 
-Building the parameter file for Rpath:
+\vspace{10pt}
+**Building the parameter file for Rpath:**
+\vspace{10pt}
 
 ```{r,  include=FALSE}
 groups <- c('whales', 'seals', 'cod', 'whiting', 'mackerel', 'anchovy', 'shrimp',
@@ -32,11 +39,13 @@ AB.params <- create.rpath.params(groups, types)
 ```
 
 **Fisheries Data:**
+\vspace{10pt}
 
 The sealers caught 15 seals with an average weight of 30kg. The fisheries catches were 45t of cod and 20t of whiting for the trawlers, 40t of mackerel and 120t of anchovy for the seiners, 20t of anchovy for the bait boats, and 5t of shrimp for the shrimpers. Calculate catches using the appropriate unit (t/km2/year), and enter in Rpath.
 
 *Static parameters for this example:*
 Biomass accumulation and un-assimilated production
+\vspace{10pt}
 
 ```{r,  include=FALSE}
 AB.params$model[Group=="seals", sealers:=0.0045] 
@@ -49,6 +58,7 @@ AB.params$model[Group=="shrimp", shrimpers:=0.05]
 ```
 
 **Biological Data:** 
+\vspace{10pt}
 
 ```{r,  include=FALSE}
 AB.params$model[Group=="whales", Biomass:=0.08] 
@@ -102,6 +112,7 @@ AB.params$model[Group=="zooplankton", ProdCons:=0.25]
 ```
 
 DIET DATA: check!
+\vspace{20pt}
 
 ```{r,  include=FALSE}
 AB.params$diet[Group == 'cod', whales := 0.1]
@@ -143,10 +154,9 @@ AB.params$diet[Group == 'detritus', benthos := .7]
 AB.params$diet[Group == 'detritus', zooplankton := .1]
 ```
 
-
 We now should enter the basic input parameters. Fortunately, the biologists have been busy, and we have some survey estimates of biomasses in the bay. The biomasses must be entered with the unit:t/km2. Whales: 10 individuals with an average weight of 800kg. Seals: 203 individuals with an average weight of 30kg. Cod: 310t. Whiting 170t. Mackerel: 122t. Anchovy: 600t. Shrimp: 0.8t/km2. Zooplankton: 14.8t/km2. Detritus: 10t/km2.
 
-Next are production/biomass ratios, which with certain assumptions correspond to the total mortality, Z. The unit is year−1, and we can often get Z from assessments. Alternatively, we have Z = F + M, so if we have the catch and the biomass, we can estimate F = C/B and add the total natural mortality to get Z. We can get estimates of M and Q/B from FishBase. Search for the species, (Gadus morhua, Merlangius merlangus, Scomber scombrus, Engraulis encrasicolus), find the life-history table, and extract the values. Estimate Z = F + M.
+Next are production/biomass ratios, which with certain assumptions correspond to the total mortality, Z. The unit is year\-1, and we can often get Z from assessments. Alternatively, we have Z = F + M, so if we have the catch and the biomass, we can estimate F = C/B and add the total natural mortality to get Z. We can get estimates of M and Q/B from FishBase. Search for the species, (Gadus morhua, Merlangius merlangus, Scomber scombrus, Engraulis encrasicolus), find the life-history table, and extract the values. Estimate Z = F + M.
 
 ```{r,  include=FALSE}
 AB.params$model[Type < 3, BioAcc  := 0]
@@ -157,28 +167,10 @@ AB.params$model[Type < 2, detritus := 1]
 AB.params$model[Type > 1, detritus := 0]
 ```
 
-It is also an option for exploited species to use an equation for estimation of Z that was developed by Beverton and Holt (1957). It is implemented in the life-history table in FishBase. It relies on estimates of length at first capture (Lc), average length in the catch (Lmean), and asymptotic length (Linf) to estimate Z. Try it for the four fish species in our model. Here are the lengths from the fishery in Anchovy Bay:
+**Check for issues in your parameter file with**
+\vspace{10pt}
 
-+---------+---------+-------------+------+
-| Species | Z (B&H) | Z from data | diff |
-+:=======:+:=======:+:===========:+:====:+
-| Cod     |  0.29   |    0.36     | -0.07|		
-+---------+---------+-------------+------+		
-| Whiting |  0.59   |    0.59     |  0.00|		
-+---------+---------+-------------+------+		
-| Mackerel|  0.63   |    1.15     | -0.51|		
-+---------+---------+-------------+------+		
-| Anchovy |  1.48   |    1.22     |  0.25|		
-+---------+---------+-------------+------+		
-
-There is a close relationship between size and P/B; the bigger animals are, the lower the P/B. Here we have: Whales: P/B = 0.05year−1; seals: get F from catch, and M is 0.09 year−1; shrimp P/B = 3year−1; benthos P/B = 3year−1; zooplankton: it is mainly small Acartia-sized plankton, with P/B = 35year−1.
-
-We can get P/B for many invertebrates from Tom Brey’s work (but don’t need to for this tutorial). Check out: http://www.thomas-brey.de/science/virtualhandbook/. There is a neat collection of empirical relationships and conversion factors.
-
-
-Check for issues in your parameter file with
-
-```{r, include=FALSE}
+```{r}
 check.rpath.params(AB.params)
 ```
 
@@ -199,101 +191,259 @@ Set the scene with rsim.scenario
 ```{r}
 AB.scene <- rsim.scenario(AB, AB.params, 1:25)
 ```
-
-Make any adjustments
-
-```{r}
-AB.scene <- adjust.fishing(AB.scene, 'ForcedEffort', group = 'trawlers',
-                           sim.year = 10:25, value = 0.5)
-```
-
-Run the scenario
-
-```{r}
-AB.run <- rsim.run(AB.scene, years = 1:25)
-```
-
-
+\vspace{20pt}
 **Food web plot**
 
 ```{r}
 webplot(AB,
-  eco.name = attr(AB, "eco.name"),
-  line.col = "grey",
-  highlight = NULL,
-  highlight.col = c("black", "red", "orange"),
-  labels = TRUE,
-  label.pos = NULL,
-  label.num = FALSE,
-  label.cex = 1,
-  fleets = FALSE,
-  type.col = "black",
-  box.order = NULL
-)
+  eco.name = attr(AB, "eco.name"),  line.col = "grey",  labels = TRUE)
 ```
+
+\newpage
+
+The Production Biomass ratio (P/B) with certain assumptions correspond to the total mortality, and so the total mortality could be calculated for the remaining species to determine their PB. The total mortality (Z) was found using two methods: estimating Z using natural mortality (M) with the fishing mortality (F), and estimating Z with growth parameters using the Beverton-Holt equation.
+The total mortality (Z) was calculated from the data (Z from data) using the equations: 
+
+                                      Z=F+M and F=C/B,
+
+where M is the natural mortality, F is the fishing mortality, C is the Catch in t/km^2, and B is the biomass in t/km^2. The natural mortality for seals was provided (M = 0.09 year\-1)). Estimates of natural mortality for cod (Gadus morhua), whiting (Merlangius merlangus), mackerel (Scomber scombrus), and anchovy (Engraulis encrasicolus) were taken from their respective life-history tables on FishBase (https://www.fishbase.se/search.php) Values of F for all species were determined using the estimates of catch and biomass of these species. Catch for each species was found by dividing the respective species fishery landings weight in tons by the area of Anchovy Bay (100 km^2). Similarly, the biomass for each species was found by dividing the respective species total survey estimate weight in tons by the area of Anchovy Bay (100 km^2). 
+
+The total mortality (Z) was calculated from the Beverton-Holt equation (Z (B/H)) using: 
+
+                          Z=K*((L_(inf )- L_mean ))/((L_(inf )- L')),
+                          
+where Lmean is the mean length of all fishes caught at sizes equal or larger than L’, which is the smallest size in the catch and here assumed to be the same as Lc, which is the mean length at entry in the fishery, assuming knife-edge selection, and thus the same as used under Yield per Recruit above.
+
+
++---------+---------+-------------+------+
+| Species | Z (B&H) | Z from data | diff |
++:=======:+:=======:+:===========:+:====:+
+| Cod     |  0.29   |    0.36     | -0.07|		
++---------+---------+-------------+------+		
+| Whiting |  0.59   |    0.59     |  0.00|		
++---------+---------+-------------+------+		
+| Mackerel|  0.63   |    1.15     | -0.51|		
++---------+---------+-------------+------+		
+| Anchovy |  1.48   |    1.22     |  0.25|		
++---------+---------+-------------+------+		
+
+
+The difference between the values of Z using these two different methods (diff) were examined for the fish species. Estimating Z from the data relies on estimates of catch, biomass, and natural mortality whereas estimating Z using Beverton-Holt relies on estimates of length. Estimates of Z from the data was found to be greater than those found from Beverton-Holt for cod and mackerel, while for anchovy it was lesser. For whiting, both methods resulted in the same value for Z.
+\vspace{20pt}
 
 **Exploring Ecosim with Anchovy Bay**
+\vspace{10pt}
+  
+Scientists have noticed a gradual decline in the seal population of about 50 kg a year. The resource managers of Anchovy Bay decide that new regulations should be put in place on the seal fishery to combat this population decline. Local trawlers are concerned that an increased seal population will negatively impact their business as their chief targets are prey for seals.  
 
-Scientists have noticed a gradual decline in the seal population of about 50 kg a year. The resource managers of Anchovy Bay decide that new regulations should be put in place on the seal fishery to combat this population decline. Local trawlers are concerned that an increased seal population will negatively impact their business as their chief targets are prey for seals. Build an rsim scenario that shows the impact of the seal decline and one that shows the impact of reducing the seal fishery in half. Also test the impact if seals are a strong ‘top-down’ predator. Run the simulations for 25 years.
+\newpage
 
-**Increasing on fishing effort for seals, reduce the seals population and increase cod and whiting biomass due to less predation mortality**
+**SCENARIOS**
+\vspace{10pt}
+
+**1) Build an rsim scenario that shows the impact of the seal decline and one that shows the impact of reducing the seal fishery in half.**
+\vspace{10pt}
+
+A decrease in fishing effort on seals will produce higher seals biomass due to less fishing pressure, producing an increase in cod biomass (we expected it to be the opposite) and a decrease in whiting biomass.
 
 ```{r}
-#load(here('data', 'AB.params.rda'))
-#load(here('data', 'AB.rda'))
+
 AB.base <- rsim.scenario(AB, AB.params, 1:25)
-AB.base <- adjust.fishing(AB.base, parameter = 'ForcedEffort', group = 'sealers',
-                          sim.year = 10:25, value = 2.5)
-```
+AB.base2 <- adjust.fishing(AB.base, parameter = 'ForcedEffort', group = 'sealers',
+                          sim.year = 1:25, value = 0.5)
 
-```{r}
-AB.run <- rsim.run(AB.base, years = 1:25)
 
+
+AB.run2 <- rsim.run(AB.base2, years = 1:25)
 #Output results
-AB.run
+#AB.run2
 #To capture results as an object use the write.Rsim function
-AB.output <- write.Rsim(AB.run)
+AB.output <- write.Rsim(AB.run2)
 ```
-```{r}
-cod <- extract.node(AB.run, 'cod')
-plot(cod$Biomass, xlab = 'Month', ylab = 'Biomass')
-
-whiting <- extract.node(AB.run, 'whiting')
-plot(whiting$Biomass, xlab = 'Month', ylab = 'Biomass')
-```
-**on the other hand, a decrease in fishing effort on seals will produce higher seals biomass due to less fishing pressure, producing a decrease in cod and whiting biomass**
 
 ```{r}
+rsim.plot(AB.run2)
+```
+
+```{r}
+seals <- extract.node(AB.run2, 'seals')
+plot(seals$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Seals")
+
+cod <- extract.node(AB.run2, 'cod')
+plot(cod$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Cod")
+
+whiting <- extract.node(AB.run2, 'whiting')
+plot(whiting$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Whiting")
+```
+
+\newpage
+
+**2) Also test the impact if seals are a strong ‘top-down’ predator. Run the simulations for 25 years.**
+\vspace{10pt}
+
+Then, seals were investigated to see what the impact would be if seals were a strong ‘top-down’ predator. To do this, we adjusted the first scenario to reflect a situation where seals had an increased effect on all of their prey.  
+\vspace{10pt}
+
+```{r, include=FALSE}
 AB.base <- rsim.scenario(AB, AB.params, 1:25)
-AB.base <- adjust.fishing(AB.base, parameter = 'ForcedEffort', group = 'sealers',
-                          sim.year = 10:25, value = 0.5)
+AB.base3 <- adjust.scenario(AB.base, parameter = 'VV', group = 'all', 
+                           groupto = 'seals', value = 3)
 ```
 
 ```{r, include=FALSE}
-AB.run <- rsim.run(AB.base, years = 1:25)
+AB.run3 <- rsim.run(AB.base3, years = 1:25)
 
 #Output results
-AB.run
+AB.run3
 #To capture results as an object use the write.Rsim function
-AB.output <- write.Rsim(AB.run)
-
-#plot results
-rsim.plot(AB.run)
+AB.output <- write.Rsim(AB.run3)
 ```
 
 ```{r}
-cod <- extract.node(AB.run, 'cod')
-plot(cod$Biomass, xlab = 'Month', ylab = 'Biomass')
-
-whiting <- extract.node(AB.run, 'whiting')
-plot(whiting$Biomass, xlab = 'Month', ylab = 'Biomass')
+#plot results
+rsim.plot(AB.run3)
 ```
 
-Several years later, ecotourism becomes a big part of Anchovy Bay. A portion of the trawlers shift their effort to taking customers whale watching. What is the impact on the groundfish species? What if cod are a strong ‘top-down’ predator? It has been studied that whiting will increase their consumption when at lower numbers. What effect does this have on the previous scenario?
+```{r}
+seals <- extract.node(AB.run3, 'seals')
+plot(seals$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Seals")
 
-if I decrease fishing effort on trawler fishery I will have a higher biomass of cod and groundfish species
+cod <- extract.node(AB.run3, 'cod')
+plot(cod$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Cod")
 
-Run scenarios varying level of trawling effort. Find the effort leading to maximum long-term yield for the trawl fishery. Plot and discuss implications for species biomass, mix of species in the trawl catch, and impact on other gears associated with fishing at maximum yield for trawl.
+whiting <- extract.node(AB.run3, 'whiting')
+plot(whiting$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Whiting")
+```
+\vspace{10pt}
 
-Finally, develop two or more strategies to test in an MSE framework within Anchovy Bay. The management objective is to maximize fishery yield but not allowing any species to go below 1/2 BMSY. Show tradeoffs between fisheries. Assuming that cod sells for $3/pound, mackerel $2/pound, whiting $1/pound, shrimp $4/pound, and anchovies $0.50/pound is one of your strategies more economically beneficial to the community? The AB_closed_loop.R script can help you set-up the closed loop simulation.
+Several years later, ecotourism becomes a big part of Anchovy Bay. A portion of the trawlers shift their effort to taking customers whale watching. 
+
+\newpage
+
+**3) What is the impact on the groundfish species?** 
+\vspace{10pt}
+
+```{r, include=FALSE}
+AB.base <- rsim.scenario(AB, AB.params, 1:25)
+AB.base6 <- adjust.fishing(AB.base, parameter = 'ForcedEffort', group = 'trawlers',
+                          sim.year = 1:25, value = 0.3)
+```
+
+```{r, include=FALSE}
+AB.run6 <- rsim.run(AB.base6, years = 1:25)
+
+#Output results
+AB.run6
+#To capture results as an object use the write.Rsim function
+AB.output <- write.Rsim(AB.run6)
+```
+
+```{r}
+#plot results
+rsim.plot(AB.run6)
+```
+
+```{r}
+whales <- extract.node(AB.run6, 'whales')
+plot(whales$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Whales")
+
+seals <- extract.node(AB.run6, 'seals')
+plot(seals$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Seals")
+
+cod <- extract.node(AB.run6, 'cod')
+plot(cod$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Cod")
+
+whiting <- extract.node(AB.run6, 'whiting')
+plot(whiting$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Whiting")
+```
+
+\newpage
+
+**4) What if cod are a strong ‘top-down’ predator? It has been studied that whiting will increase their consumption when at lower numbers. What effect does this have on the previous scenario?**
+\vspace{10pt}
+
+```{r, include=FALSE}
+AB.base <- rsim.scenario(AB, AB.params, 1:25)
+AB.base5 <- adjust.scenario(AB.base, parameter = 'VV', group = 'all', 
+                           groupto = 'cod', value = 3)
+```
+
+```{r, include=FALSE}
+AB.run5 <- rsim.run(AB.base5, years = 1:25)
+
+#Output results
+AB.run5
+#To capture results as an object use the write.Rsim function
+AB.output <- write.Rsim(AB.run5)
+```
+
+If we consider cod as top predator, its biomass increases with time and whiting biomass decreases. 
+
+```{r}
+cod <- extract.node(AB.run5, 'cod')
+plot(cod$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Cod")
+
+whiting <- extract.node(AB.run5, 'whiting')
+plot(whiting$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Whiting")
+```
+
+To see whiting will increase their consumption when at lower numbers we plot the withing consumption and anchovey biomass. The effect of the whiting biomass reduction produces an increase in the consumption/biomass ratio and therefore a decrease in anchovy biomass. 
+
+```{r}
+plot(AB.run5$annual_QB[,5], main = "Whiting consumption", xlab="years", ylab="Q/B ratio")
+
+anchovy <- extract.node(AB.run5, 'anchovy')
+plot(anchovy$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Anchovy")
+```
+
+\newpage
+
+**5) Run scenarios varying level of trawling effort. Find the effort leading to maximum long-term yield for the trawl fishery. Plot and discuss implications for species biomass, mix of species in the trawl catch, and impact on other gears associated with fishing at maximum yield for trawl.**
+\vspace{10pt}
+
+```{r, include=FALSE}
+AB.base <- rsim.scenario(AB, AB.params, 1:25)
+AB.base6 <- adjust.fishing(AB.base, parameter = 'ForcedEffort', group = 'trawlers',
+                          sim.year = 1:25, value = 0.3)
+```
+
+```{r, include=FALSE}
+AB.run6 <- rsim.run(AB.base6, years = 1:25)
+
+#Output results
+AB.run6
+#To capture results as an object use the write.Rsim function
+AB.output <- write.Rsim(AB.run6)
+```
+
+```{r}
+#plot results
+rsim.plot(AB.run6)
+```
+
+```{r}
+whales <- extract.node(AB.run6, 'whales')
+plot(whales$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Whales")
+
+seals <- extract.node(AB.run6, 'seals')
+plot(seals$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Seals")
+
+cod <- extract.node(AB.run6, 'cod')
+plot(cod$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Cod")
+
+whiting <- extract.node(AB.run6, 'whiting')
+plot(whiting$Biomass, xlab = 'Month', ylab = 'Biomass', main = "Whiting")
+```
+
+\newpage
+
+Finally, develop two or more strategies to test in an MSE framework within Anchovy Bay. The management objective is to maximize fishery yield but not allowing any species to go below 1/2 BMSY. 
+\vspace{10pt}
+
+**6) Show tradeoffs between fisheries. Assuming that cod sells for $3/pound, mackerel $2/pound, whiting $1/pound, shrimp $4/pound, and anchovies $0.50/pound is one of your strategies more economically beneficial to the community? The AB_closed_loop.R script can help you set-up the closed loop simulation.**
+
+\vspace{10pt}
+
+
+
 
