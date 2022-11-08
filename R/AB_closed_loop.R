@@ -12,11 +12,11 @@ AB.run <- rsim.run(AB.base, years = 1:25)
 
 #Determine reference point for cod----
 #Turn off fishing to get a proxy for b0
-#gear <- AB.params$model[Type == 3, Group]
-#for(i in 1:length(gear)){
-#  AB.base <- adjust.fishing(AB.base, parameter = 'ForcedEffort', group = gear[i], 
-#                            value = 0, sim.year = 0:100)
-#}
+gear <- AB.params$model[Type == 3, Group]
+for(i in 1:length(gear)){
+  AB.base <- adjust.fishing(AB.base, parameter = 'ForcedEffort', group = gear[i], 
+                            value = 0, sim.year = 0:100)
+}
 
 AB.b0 <- rsim.run(AB.base, method = 'RK4', 1:25)
 
